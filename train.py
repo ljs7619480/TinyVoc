@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_args():
+    """ Argument parser for traing hyperparameter"""
     parser = argparse.ArgumentParser()
     parser.add_argument('--weight', type=str,
                         default='trained_model/current.pkl', help='model.pth path(s)')
@@ -38,6 +39,8 @@ def get_args():
                         help='if set, it will only forwarding the whole testing data and show the evaluating result')
     parser.add_argument('--save_json', action='store_true',
                         help='make submission file')
+    parser.add_argument('--pretrained', action='store_true',
+                        help='use pretrained model on coco dataset')
 
     opt = parser.parse_args()
     opt.device = torch.device('cuda') if torch.cuda.is_available()\
@@ -47,17 +50,29 @@ def get_args():
 
 
 def get_model(pretrained, num_classes):
+    """ To get the maskRcnn model
+    Note: TBD, change the backbone model pfn and other modules
+    :param: pretrained(bool), if set, the model we load the model weights 
+            pretrained on pascal dataset
+    :param: num_classes(int), it should be set to N(catagerories) +1(background)
+    """
     # anchor_generator = AnchorGenerator(sizes=((32, 64, 128, 256, 512),),
     #                                    aspect_ratios=((0.5, 1.0, 2.0),))
 
     # roi_pooler = torchvision.ops.MultiScaleRoIAlign(featmap_names=[0],
     #                                                 output_size=7,
     #                                                 sampling_ratio=2)
-    model = maskrcnn_resnet50_fpn(pretrained=False, num_classes=21)
+    if pretrained:
+        print(">>>>>Use pretrained model<<<<<")
+    model = maskrcnn_resnet50_fpn(pretrained=True, num_classes=21)
     return model
 
 
 def get_transform(train):
+    """ To get the transforms object
+    :param: train(bool), if set, it will apply all augmented methods;
+            otherwise, only to_tensor and normalize will be used.
+    """
     transforms = []
     if train:
         transforms.append(T.ColorJitter(0.2, 0.2, 0.2, 0.05))
@@ -85,7 +100,7 @@ def train(opt):
         val_dataset, batch_size=opt.bs, shuffle=False, num_workers=opt.nr_worker, collate_fn=utils.collate_fn)
 
     # prepare model
-    model = get_model(pretrained=False, num_classes=opt.nr_class)
+    model = get_model(pretrained=opt.pretrained, num_classes=opt.nr_class)
     if os.path.isfile(opt.weight):
         print("load model weight, {}".format(opt.weight))
         model.load_state_dict(torch.load(opt.weight))
@@ -123,6 +138,9 @@ def train(opt):
 
 
 def eval_(opt):
+    """ Show evaluated result of training data
+    forwarding training datasets and shows the evaluated result measured by cocoeval-tool
+    """
     dataset = TinyVocDataset(
         'dataset', transforms=get_transform(False), train=True)
     dataloader = torch.utils.data.DataLoader(
@@ -138,6 +156,7 @@ def eval_(opt):
 
 
 def test(opt):
+    """For warding the test data"""
     import matplotlib.pyplot as plt
     from pycocotools.coco import COCO
     import numpy as np

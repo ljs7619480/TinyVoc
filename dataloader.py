@@ -7,6 +7,12 @@ from pycocotools.coco import COCO
 
 class TinyVocDataset(object):
     def __init__(self, root, transforms=None, train=True):
+        """ 
+        :param: root(str) path to dataset root directory
+        :param: transform(torchvision.transform.compose) if given, 
+                it will be apply to the training data before return.
+        :param: train(bool) if set, it will laod the coco meta of traing set.
+        """
         self.root = root
         self.transforms = transforms
         self.coco = COCO(os.path.join(root, 'pascal_train.json')) if train\
