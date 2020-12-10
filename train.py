@@ -100,7 +100,7 @@ def train(opt):
         optimizer = torch.optim.SGD(
             params, lr=opt.lr, momentum=0.5, weight_decay=0.0005)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(
-        optimizer, step_size=5, gamma=0.5)
+        optimizer, step_size=5, gamma=0.8)
 
     best = float('inf')
     for epoch in range(opt.start_epoch, opt.nr_epoch):
