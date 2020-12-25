@@ -64,7 +64,9 @@ def get_model(pretrained, num_classes):
     #                                                 sampling_ratio=2)
     if pretrained:
         print(">>>>>Use pretrained model<<<<<")
-    model = maskrcnn_resnet50_fpn(pretrained=True, num_classes=21)
+        model = maskrcnn_resnet50_fpn(pretrained=True, num_classes=21)
+    else:
+        model = maskrcnn_resnet50_fpn(pretrained=False, num_classes=21)
     return model
 
 
